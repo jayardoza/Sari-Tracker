@@ -94,41 +94,6 @@ export default function DailyPage() {
     setQuantities(newQuantities);
   };
 
-  const handleSave = async (productId: string) => {
-    try {
-      const quantity = quantities.get(productId) || 0;
-      const price = prices.get(productId) || 0;
-      const totalAmount = quantity * price;
-      const existingSale = dailySales.get(productId);
-
-      if (existingSale) {
-        const { error } = await supabase
-          .from("daily_sales")
-          .update({ quantity_sold: quantity, total_amount: totalAmount })
-          .eq("id", existingSale.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("daily_sales")
-          .insert([
-            {
-              product_id: productId,
-              date: selectedDate,
-              quantity_sold: quantity,
-              total_amount: totalAmount,
-            },
-          ]);
-
-        if (error) throw error;
-      }
-
-      fetchData();
-    } catch (error) {
-      console.error("Error saving sale:", error);
-    }
-  };
-
   const handleDelete = async (productId: string) => {
     try {
       const existingSale = dailySales.get(productId);
@@ -143,6 +108,50 @@ export default function DailyPage() {
       fetchData();
     } catch (error) {
       console.error("Error deleting sale:", error);
+    }
+  };
+
+  const handleSaveAll = async () => {
+    try {
+      // Get all products that have quantity > 0
+      const productsToSave = Array.from(quantities.entries()).filter(
+        ([_, qty]) => qty > 0
+      );
+
+      if (productsToSave.length === 0) return;
+
+      // Save each product with quantity
+      for (const [productId, quantity] of productsToSave) {
+        const price = prices.get(productId) || 0;
+        const totalAmount = quantity * price;
+        const existingSale = dailySales.get(productId);
+
+        if (existingSale) {
+          const { error } = await supabase
+            .from("daily_sales")
+            .update({ quantity_sold: quantity, total_amount: totalAmount })
+            .eq("id", existingSale.id);
+
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("daily_sales")
+            .insert([
+              {
+                product_id: productId,
+                date: selectedDate,
+                quantity_sold: quantity,
+                total_amount: totalAmount,
+              },
+            ]);
+
+          if (error) throw error;
+        }
+      }
+
+      fetchData();
+    } catch (error) {
+      console.error("Error saving all sales:", error);
     }
   };
 
@@ -297,12 +306,6 @@ export default function DailyPage() {
                             </td>
                             <td className="text-right py-3">
                               <div className="flex justify-end gap-2">
-                                <button
-                                  onClick={() => handleSave(product.id)}
-                                  className="p-2 hover:bg-primary/10 rounded transition-colors text-primary"
-                                >
-                                  <Save size={16} />
-                                </button>
                                 {dailySales.has(product.id) && (
                                   <button
                                     onClick={() => handleDelete(product.id)}
@@ -327,6 +330,15 @@ export default function DailyPage() {
             <div className="flex justify-between items-center">
               <span className="text-lg font-semibold">Daily Total</span>
               <span className="text-2xl font-bold">₱{dailyTotal.toFixed(2)}</span>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={handleSaveAll}
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"
+              >
+                <Save size={18} />
+                Save All
+              </button>
             </div>
           </div>
         </div>

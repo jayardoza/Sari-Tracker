@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "POS System - Inventory & Sales",
+  title: "Sari-Tracker",
   description: "Modern POS system for inventory and sales tracking",
 };
 

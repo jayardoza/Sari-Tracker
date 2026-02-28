@@ -49,7 +49,7 @@ export default function Sidebar({ activePage, setActivePage }: SidebarProps) {
       >
         {/* Header */}
         <div className="p-6 border-b border-border">
-          <h1 className="text-2xl font-bold tracking-tight">POS</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Sari-Tracker</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Inventory & Sales
           </p>
