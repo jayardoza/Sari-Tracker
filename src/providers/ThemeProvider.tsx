@@ -15,32 +15,54 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const isDarkMode =
-      localStorage.getItem("theme") === "dark" ||
-      (!("theme" in localStorage) &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches);
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem("theme");
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    
+    const shouldBeDark = savedTheme === "dark" || (!savedTheme && systemPrefersDark);
+    
+    setIsDark(shouldBeDark);
+    applyTheme(shouldBeDark);
+    
+    setMounted(true);
+  }, []);
 
-    setIsDark(isDarkMode);
-    if (isDarkMode) {
+  const applyTheme = (dark: boolean) => {
+    // Apply to html element
+    if (dark) {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
-    setMounted(true);
-  }, []);
+    
+    // Also apply to body for extra safety
+    if (dark) {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+    }
+    
+    // Apply background directly to body
+    if (dark) {
+      document.body.style.backgroundColor = "#0f0f0f";
+      document.body.style.color = "#ffffff";
+    } else {
+      document.body.style.backgroundColor = "#ffffff";
+      document.body.style.color = "#000000";
+    }
+  };
 
   const toggleTheme = () => {
-    setIsDark((prev) => {
-      const newIsDark = !prev;
-      localStorage.setItem("theme", newIsDark ? "dark" : "light");
-
-      if (newIsDark) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-      return newIsDark;
-    });
+    const newIsDark = !isDark;
+    
+    // Save preference
+    localStorage.setItem("theme", newIsDark ? "dark" : "light");
+    
+    // Update state
+    setIsDark(newIsDark);
+    
+    // Apply theme
+    applyTheme(newIsDark);
   };
 
   return (

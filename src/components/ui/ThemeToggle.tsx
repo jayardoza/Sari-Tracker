@@ -6,6 +6,7 @@ import { useTheme } from "@/providers/ThemeProvider";
 export default function ThemeToggle() {
   const { isDark, toggleTheme, mounted } = useTheme();
 
+  // Don't render until mounted to prevent flash
   if (!mounted) {
     return (
       <div className="w-full flex items-center justify-between px-4 py-3 rounded-lg bg-secondary text-foreground">

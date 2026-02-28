@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Product, Price, Category, DailySale } from "@/types";
 import { format } from "date-fns";
-import { Trash2, Save } from "lucide-react";
+import { Save, RotateCcw, Trash2 } from "lucide-react";
 
 const CATEGORIES: Category[] = [
   "Biscuits",
@@ -94,23 +94,6 @@ export default function DailyPage() {
     setQuantities(newQuantities);
   };
 
-  const handleDelete = async (productId: string) => {
-    try {
-      const existingSale = dailySales.get(productId);
-      if (!existingSale) return;
-
-      const { error } = await supabase
-        .from("daily_sales")
-        .delete()
-        .eq("id", existingSale.id);
-
-      if (error) throw error;
-      fetchData();
-    } catch (error) {
-      console.error("Error deleting sale:", error);
-    }
-  };
-
   const handleSaveAll = async () => {
     try {
       // Get all products that have quantity > 0
@@ -152,6 +135,47 @@ export default function DailyPage() {
       fetchData();
     } catch (error) {
       console.error("Error saving all sales:", error);
+    }
+  };
+
+  const handleReset = async () => {
+    try {
+      // Delete all sales for the selected date
+      const { error } = await supabase
+        .from("daily_sales")
+        .delete()
+        .eq("date", selectedDate);
+
+      if (error) throw error;
+      
+      // Reset quantities to 0
+      setQuantities(new Map());
+      fetchData();
+    } catch (error) {
+      console.error("Error resetting sales:", error);
+    }
+  };
+
+  const handleDelete = async (productId: string) => {
+    try {
+      const existingSale = dailySales.get(productId);
+      if (!existingSale) return;
+
+      const { error } = await supabase
+        .from("daily_sales")
+        .delete()
+        .eq("id", existingSale.id);
+
+      if (error) throw error;
+
+      // Remove from local state
+      const newQuantities = new Map(quantities);
+      newQuantities.delete(productId);
+      setQuantities(newQuantities);
+      
+      fetchData();
+    } catch (error) {
+      console.error("Error deleting sale:", error);
     }
   };
 
@@ -279,6 +303,7 @@ export default function DailyPage() {
                         const qty = quantities.get(product.id) || 0;
                         const price = prices.get(product.id) || 0;
                         const total = qty * price;
+                        const hasExistingSale = dailySales.has(product.id);
 
                         return (
                           <tr
@@ -305,16 +330,15 @@ export default function DailyPage() {
                               ₱{total.toFixed(2)}
                             </td>
                             <td className="text-right py-3">
-                              <div className="flex justify-end gap-2">
-                                {dailySales.has(product.id) && (
-                                  <button
-                                    onClick={() => handleDelete(product.id)}
-                                    className="p-2 hover:bg-destructive/10 rounded transition-colors text-destructive"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                )}
-                              </div>
+                              {hasExistingSale && (
+                                <button
+                                  onClick={() => handleDelete(product.id)}
+                                  className="p-2 hover:bg-destructive/10 rounded transition-colors text-destructive"
+                                  title="Delete this item"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              )}
                             </td>
                           </tr>
                         );
@@ -331,7 +355,14 @@ export default function DailyPage() {
               <span className="text-lg font-semibold">Daily Total</span>
               <span className="text-2xl font-bold">₱{dailyTotal.toFixed(2)}</span>
             </div>
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-2 px-4 py-2 bg-secondary text-foreground rounded-lg hover:bg-muted transition-colors"
+              >
+                <RotateCcw size={18} />
+                Reset All
+              </button>
               <button
                 onClick={handleSaveAll}
                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity"

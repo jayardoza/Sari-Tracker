@@ -206,7 +206,7 @@ export default function PricingPage() {
                         <th className="text-left py-3 font-medium">
                           Product Name
                         </th>
-                        <th className="text-left py-3 font-medium">Price</th>
+                        <th className="text-left py-3 font-medium">Price (₱)</th>
                         <th className="text-right py-3 font-medium">Action</th>
                       </tr>
                     </thead>
@@ -218,17 +218,20 @@ export default function PricingPage() {
                         >
                           <td className="py-3">{product.name}</td>
                           <td className="py-3">
-                            <input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={prices.get(product.id) || ""}
-                              onChange={(e) =>
-                                handlePriceChange(product.id, e.target.value)
-                              }
-                              placeholder="0.00"
-                              className="w-32 px-3 py-1 border border-border rounded bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                            />
+                            <div className="flex items-center gap-1">
+                              <span>₱</span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={prices.get(product.id) || ""}
+                                onChange={(e) =>
+                                  handlePriceChange(product.id, e.target.value)
+                                }
+                                placeholder="0.00"
+                                className="w-32 px-3 py-1 border border-border rounded bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                              />
+                            </div>
                           </td>
                           <td className="text-right py-3">
                             <button

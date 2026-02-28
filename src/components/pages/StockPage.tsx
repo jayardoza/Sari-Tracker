@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Product, Price, Category, Stock, DailySale } from "@/types";
 import { format } from "date-fns";
-import { Save, Trash2 } from "lucide-react";
+import { Save, Trash2, Plus } from "lucide-react";
 
 const CATEGORIES: Category[] = [
   "Biscuits",
@@ -53,6 +53,11 @@ export default function StockPage() {
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(
     new Set(CATEGORIES)
   );
+  const [addModal, setAddModal] = useState<{productId: string, productName: string} | null>(null);
+  const [addAmount, setAddAmount] = useState("");
+
+  // Check if selected month is January (for end_stock editing)
+  const isJanuary = selectedMonth.split("-")[1] === "01";
 
   const fetchData = useCallback(async () => {
     try {
@@ -185,6 +190,30 @@ export default function StockPage() {
     }
   };
 
+  // Add stock - opens modal
+  const openAddModal = (productId: string, productName: string) => {
+    setAddModal({ productId, productName });
+    setAddAmount("");
+  };
+
+  // Add stock amount
+  const handleAddStock = () => {
+    if (!addModal || !addAmount) return;
+    
+    const amount = parseInt(addAmount) || 0;
+    if (amount <= 0) return;
+
+    // Get current additional_stock value
+    const currentStock = stockData.get(addModal.productId);
+    const currentAdditional = currentStock?.additional_stock || 0;
+    
+    // Update form data
+    handleFieldChange(addModal.productId, 'additional_stock', String(currentAdditional + amount));
+
+    setAddModal(null);
+    setAddAmount("");
+  };
+
   const getComputedValues = (productId: string): StockRow => {
     const stock = stockData.get(productId);
     const endStock = stock?.end_stock || 0;
@@ -239,6 +268,41 @@ export default function StockPage() {
 
   return (
     <div className="space-y-6">
+      {/* Add Stock Modal */}
+      {addModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-card border border-border rounded-lg p-6 w-80">
+            <h3 className="text-lg font-semibold mb-4">Add Stock</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {addModal.productName}
+            </p>
+            <input
+              type="number"
+              min="1"
+              value={addAmount}
+              onChange={(e) => setAddAmount(e.target.value)}
+              placeholder="Enter amount to add"
+              className="w-full px-3 py-2 border border-border rounded bg-input text-foreground mb-4"
+              autoFocus
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddStock}
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
+              >
+                <Plus size={16} /> Add
+              </button>
+              <button
+                onClick={() => setAddModal(null)}
+                className="flex-1 px-3 py-2 bg-secondary text-foreground rounded hover:bg-muted"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Stock</h1>
@@ -326,6 +390,7 @@ export default function StockPage() {
                         </th>
                         <th className="text-left py-2 px-2 font-medium">
                           End Stock
+                          {isJanuary && <span className="text-xs text-muted-foreground ml-1">(Editable)</span>}
                         </th>
                         <th className="text-left py-2 px-2 font-medium">
                           Partial
@@ -346,7 +411,7 @@ export default function StockPage() {
                           Amount
                         </th>
                         <th className="text-left py-2 px-2 font-medium">
-                          Variance $
+                          Variance ₱
                         </th>
                         <th className="text-right py-2 px-2 font-medium">
                           Actions
@@ -357,6 +422,8 @@ export default function StockPage() {
                       {categoryProducts.map((product) => {
                         const stock = stockData.get(product.id);
                         const computed = getComputedValues(product.id);
+                        const endStockValue = (formData.get(product.id)?.end_stock as number) ?? stock?.end_stock ?? "";
+                        const additionalStockValue = (formData.get(product.id)?.additional_stock as number) ?? stock?.additional_stock ?? 0;
 
                         return (
                           <tr
@@ -368,9 +435,20 @@ export default function StockPage() {
                               <input
                                 type="number"
                                 min="0"
-                                value={stock?.end_stock || ""}
-                                disabled
-                                className="w-16 px-2 py-1 border border-border rounded bg-muted text-muted-foreground"
+                                value={endStockValue}
+                                disabled={!isJanuary}
+                                onChange={(e) =>
+                                  handleFieldChange(
+                                    product.id,
+                                    "end_stock",
+                                    e.target.value
+                                  )
+                                }
+                                className={`w-16 px-2 py-1 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary ${
+                                  isJanuary
+                                    ? "bg-input text-foreground"
+                                    : "bg-muted text-muted-foreground"
+                                }`}
                               />
                             </td>
                             <td className="py-2 px-2">
@@ -398,25 +476,28 @@ export default function StockPage() {
                               {computed.variance}
                             </td>
                             <td className="py-2 px-2">
-                              <input
-                                type="number"
-                                min="0"
-                                value={
-                                  (formData.get(product.id)
-                                    ?.additional_stock as number) ||
-                                  stock?.additional_stock ||
-                                  ""
-                                }
-                                onChange={(e) =>
-                                  handleFieldChange(
-                                    product.id,
-                                    "additional_stock",
-                                    e.target.value
-                                  )
-                                }
-                                placeholder="0"
-                                className="w-16 px-2 py-1 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                              />
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={additionalStockValue}
+                                  onChange={(e) =>
+                                    handleFieldChange(
+                                      product.id,
+                                      "additional_stock",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-14 px-2 py-1 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                                <button
+                                  onClick={() => openAddModal(product.id, product.name)}
+                                  className="p-1 hover:bg-primary/10 rounded transition-colors text-primary"
+                                  title="Quick Add Stock"
+                                >
+                                  <Plus size={14} />
+                                </button>
+                              </div>
                             </td>
                             <td className="py-2 px-2 text-center">
                               {computed.sale}
