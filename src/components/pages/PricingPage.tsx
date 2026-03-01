@@ -232,13 +232,15 @@ export default function PricingPage() {
                             </div>
                           </td>
                           <td className="px-4 py-2 text-right align-middle">
-                            <button
-                              onClick={() => handleSave(product.id)}
-                              className="flex items-center gap-2 px-3 py-1 bg-primary text-primary-foreground rounded hover:opacity-90 transition-opacity text-sm"
-                            >
-                              <Save size={16} />
-                              Save
-                            </button>
+                            <div className="flex justify-end">
+                              <button
+                                onClick={() => handleSave(product.id)}
+                                className="flex items-center gap-2 px-3 py-1 bg-primary text-primary-foreground rounded hover:opacity-90 transition-opacity text-sm"
+                              >
+                                <Save size={16} />
+                                Save
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}

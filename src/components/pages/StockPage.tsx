@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Product, Price, Category, Stock, DailySale } from "@/types";
 import { format } from "date-fns";
-import { Save, Trash2, Plus } from "lucide-react";
+import { Save, Trash2 } from "lucide-react";
 
 const CATEGORIES: Category[] = [
   "Biscuits",
@@ -43,6 +43,7 @@ export default function StockPage() {
   const [prices, setPrices] = useState<Map<string, number>>(new Map());
   const [stockData, setStockData] = useState<Map<string, Stock>>(new Map());
   const [prevStockData, setPrevStockData] = useState<Map<string, Stock>>(new Map());
+  // Additional stock array per product
   const [formData, setFormData] = useState<
     Map<string, Partial<Stock>>
   >(new Map());
@@ -54,8 +55,7 @@ export default function StockPage() {
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(
     new Set(CATEGORIES)
   );
-  const [addModal, setAddModal] = useState<{productId: string, productName: string} | null>(null);
-  const [addAmount, setAddAmount] = useState("");
+  // Removed addModal and addAmount state
 
   // Check if selected month is January (for end_stock editing)
   const isJanuary = selectedMonth.split("-")[1] === "01";
@@ -199,28 +199,7 @@ export default function StockPage() {
   };
 
   // Add stock - opens modal
-  const openAddModal = (productId: string, productName: string) => {
-    setAddModal({ productId, productName });
-    setAddAmount("");
-  };
-
-  // Add stock amount
-  const handleAddStock = () => {
-    if (!addModal || !addAmount) return;
-    
-    const amount = parseInt(addAmount) || 0;
-    if (amount <= 0) return;
-
-    // Get current additional_stock value
-    const currentStock = stockData.get(addModal.productId);
-    const currentAdditional = currentStock?.additional_stock || 0;
-    
-    // Update form data
-    handleFieldChange(addModal.productId, 'additional_stock', String(currentAdditional + amount));
-
-    setAddModal(null);
-    setAddAmount("");
-  };
+  // Removed modal and add stock logic
 
   const getComputedValues = (productId: string): StockRow => {
     const stock = stockData.get(productId);
@@ -228,12 +207,14 @@ export default function StockPage() {
     // For non-January, use previous month's partial_stock as end_stock
     const isJanuary = selectedMonth.split("-")[1] === "01";
     const endStock = isJanuary
-      ? ((formData.get(productId)?.end_stock as number) || stock?.end_stock || 0)
+          ? (formData.get(productId)?.end_stock as number) || stock?.end_stock || 0
       : prevStock?.partial_stock || 0;
     const partialStock =
       (formData.get(productId)?.partial_stock as number) || stock?.partial_stock || 0;
-    const additionalStock =
-      (formData.get(productId)?.additional_stock as number) || stock?.additional_stock || 0;
+    // Sum additional_stock_items if present
+    // Removed: additionalStockItems (unused)
+        const additionalStock =
+          (formData.get(productId)?.additional_stock as number) ?? stock?.additional_stock ?? 0;
     const sale = dailySales.get(productId) || 0;
     const price = prices.get(productId) || 0;
 
@@ -282,40 +263,6 @@ export default function StockPage() {
 
   return (
     <div className="space-y-6 bg-background text-foreground min-h-screen">
-      {/* Add Stock Modal */}
-      {addModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card border border-border rounded-lg p-6 w-80">
-            <h3 className="text-lg font-semibold mb-4">Add Stock</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {addModal.productName}
-            </p>
-            <input
-              type="number"
-              min="1"
-              value={addAmount}
-              onChange={(e) => setAddAmount(e.target.value)}
-              placeholder="Enter amount to add"
-              className="w-full px-3 py-2 border border-border rounded bg-input text-foreground mb-4"
-              autoFocus
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleAddStock}
-                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-primary text-primary-foreground rounded hover:opacity-90"
-              >
-                <Plus size={16} /> Add
-              </button>
-              <button
-                onClick={() => setAddModal(null)}
-                className="flex-1 px-3 py-2 bg-secondary text-foreground rounded hover:bg-muted"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="flex justify-between items-center">
         <div>
@@ -440,13 +387,6 @@ export default function StockPage() {
                         const partialStockValue = (formData.get(product.id)?.partial_stock as number) ?? stock?.partial_stock ?? "";
                         const additionalStockValue = (formData.get(product.id)?.additional_stock as number) ?? stock?.additional_stock ?? 0;
 
-                        // Get previous month for end stock logic
-                        const [year, month] = selectedMonth.split("-");
-                        const prevMonth = month === "01" ? `${parseInt(year) - 1}-12` : `${year}-${String(parseInt(month) - 1).padStart(2, "0")}`;
-                        // Fetch previous month stock for this product
-                        // (Assume previousStockData is available, otherwise show blank)
-                        // You may want to fetch previousStockData in fetchData for full accuracy
-
                         return (
                           <tr
                             key={product.id}
@@ -489,28 +429,19 @@ export default function StockPage() {
                             </td>
                             <td className="px-2 py-2 align-middle">{computed.variance}</td>
                             <td className="px-2 py-2 align-middle">
-                              <div className="flex items-center gap-1">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  value={additionalStockValue}
-                                  onChange={(e) =>
-                                    handleFieldChange(
-                                      product.id,
-                                      "additional_stock",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-14 px-2 py-1 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                                />
-                                <button
-                                  onClick={() => openAddModal(product.id, product.name)}
-                                  className="p-1 hover:bg-primary/10 rounded transition-colors text-primary"
-                                  title="Quick Add Stock"
-                                >
-                                  <Plus size={14} />
-                                </button>
-                              </div>
+                              <input
+                                type="number"
+                                min="0"
+                                value={additionalStockValue}
+                                onChange={e =>
+                                  handleFieldChange(
+                                    product.id,
+                                    "additional_stock",
+                                    e.target.value
+                                  )
+                                }
+                                className="w-16 px-2 py-1 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                              />
                             </td>
                             <td className="px-2 py-2 align-middle">{computed.sale}</td>
                             <td className="px-2 py-2 align-middle">{computed.total_stock}</td>

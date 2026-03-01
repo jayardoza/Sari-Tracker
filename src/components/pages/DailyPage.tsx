@@ -324,15 +324,24 @@ export default function DailyPage() {
                             </td>
                             <td className="px-4 py-2 font-medium align-middle">₱{total.toFixed(2)}</td>
                             <td className="px-4 py-2 text-right align-middle">
-                              {hasExistingSale && (
+                              <div className="flex justify-end gap-2">
+                                {hasExistingSale && (
+                                  <button
+                                    onClick={() => handleDelete(product.id)}
+                                    className="p-2 hover:bg-destructive/10 rounded transition-colors text-destructive"
+                                    title="Delete this item"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                )}
                                 <button
-                                  onClick={() => handleDelete(product.id)}
-                                  className="p-2 hover:bg-destructive/10 rounded transition-colors text-destructive"
-                                  title="Delete this item"
+                                  onClick={() => handleQuantityChange(product.id, "0")}
+                                  className="p-2 hover:bg-muted rounded transition-colors text-muted-foreground"
+                                  title="Clear quantity"
                                 >
-                                  <Trash2 size={16} />
+                                  Clear
                                 </button>
-                              )}
+                              </div>
                             </td>
                           </tr>
                         );
