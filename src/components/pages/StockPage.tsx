@@ -269,16 +269,40 @@ export default function StockPage() {
           <h1 className="text-4xl font-bold tracking-tight">Stock</h1>
           <p className="text-muted-foreground mt-2">Manage monthly stock</p>
         </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Select Month
-          </label>
-          <input
-            type="month"
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-4 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+        <div className="flex gap-2 items-end">
+          <div>
+            <label className="block text-sm font-medium mb-2">Year</label>
+            <select
+              value={selectedMonth.split("-")[0]}
+              onChange={e => {
+                const year = e.target.value;
+                const month = selectedMonth.split("-")[1];
+                setSelectedMonth(`${year}-${month}`);
+              }}
+              className="px-4 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {Array.from({ length: 10 }, (_, i) => 2020 + i).map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Month</label>
+            <select
+              value={selectedMonth.split("-")[1]}
+              onChange={e => {
+                const month = e.target.value;
+                const year = selectedMonth.split("-")[0];
+                setSelectedMonth(`${year}-${month}`);
+              }}
+              className="px-4 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              {[...Array(12)].map((_, i) => {
+                const m = String(i + 1).padStart(2, "0");
+                return <option key={m} value={m}>{format(new Date(2020, i, 1), "MMMM")}</option>;
+              })}
+            </select>
+          </div>
         </div>
       </div>
 
