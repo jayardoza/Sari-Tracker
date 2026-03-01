@@ -1,8 +1,7 @@
-# TODO - Date-Based Pricing System
+# TODO - Calendar System Unification
 
 ## Tasks:
-- [x] Create price_history table migration for Supabase
-- [x] Add PriceHistory type to types/index.ts
-- [x] Update PricingPage to set prices with effective_from dates and close previous periods
-- [x] Update DailyPage to query prices based on each specific date from price_history
-- [x] Unify calendar format across Pricing, Stock, and Sales pages
+- [x] Update SalesPage.tsx - Already uses `<input type="month">` ✅
+- [x] Update StockPage.tsx - Changed from Year/Month dropdowns to single month picker
+- [x] Update PricingPage.tsx - Added month/year picker for consistency
+- [x] Fix type errors in SummaryPage.tsx (removed unused functions)

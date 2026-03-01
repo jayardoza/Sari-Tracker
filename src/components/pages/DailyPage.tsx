@@ -72,11 +72,10 @@ export default function DailyPage() {
 
       setProducts(productsRes.data || []);
 
-      // Get price history for the selected date
+      // Get ALL price history for the selected date (need all to find most recent)
       const priceHistoryRes = await supabase
         .from("price_history")
         .select("*")
-        .lte("effective_from", selectedDate)
         .order("effective_from", { ascending: false });
 
       if (priceHistoryRes.error) console.error("Price history fetch error:", priceHistoryRes.error);
@@ -86,16 +85,23 @@ export default function DailyPage() {
       
       // Process price history - get the most recent price effective for selected date
       if (priceHistoryRes.data) {
-        const historyData = priceHistoryRes.data;
-        // Filter to only include entries effective for the selected date
-        const filteredHistory = historyData.filter((ph: PriceHistoryItem) => 
-          ph.effective_to === null || ph.effective_to >= selectedDate
-        );
+        // Group by product_id and find the most recent price for each
+        const priceByProduct = new Map<string, PriceHistoryItem[]>();
         
-        // Get the most recent price for each product
-        filteredHistory.forEach((priceHistory: PriceHistoryItem) => {
-          if (!priceMap.has(priceHistory.product_id)) {
-            priceMap.set(priceHistory.product_id, priceHistory.price);
+        priceHistoryRes.data.forEach((ph: PriceHistoryItem) => {
+          const existing = priceByProduct.get(ph.product_id) || [];
+          existing.push(ph);
+          priceByProduct.set(ph.product_id, existing);
+        });
+        
+        // For each product, find the price effective for selected date
+        priceByProduct.forEach((history, productId) => {
+          const effectivePrice = history.find(ph => 
+            ph.effective_from <= selectedDate && 
+            (ph.effective_to === null || ph.effective_to >= selectedDate)
+          );
+          if (effectivePrice) {
+            priceMap.set(productId, effectivePrice.price);
           }
         });
       }

@@ -69,27 +69,8 @@ export default function SummaryPage() {
       .reduce((sum, sale) => sum + (sale.total_amount || 0), 0);
   };
 
-  const getMonthlyVariance = (month: number) => {
-    // Variance would need to come from stock data, not daily sales
-    // For now, returning 0 as we don't have variance in daily_sales
-    return 0;
-  };
-
-  const getMonthlyStockValue = (month: number) => {
-    const monthStr = String(month).padStart(2, "0");
-    const monthStock = stockData.filter((s) => s.month_year === `${selectedYear}-${monthStr}`);
-    return monthStock.reduce((sum, s) => {
-      const totalStock = (s.partial_stock || 0) + (s.additional_stock || 0) - (s.sale || 0);
-      return sum + (totalStock * 0); // Would need price lookup
-    }, 0);
-  };
-
   const yearlyTotalSales = MONTHS.reduce(
     (sum, _, i) => sum + getMonthlySales(i + 1),
-    0
-  );
-  const yearlyTotalVariance = MONTHS.reduce(
-    (sum, _, i) => sum + getMonthlyVariance(i + 1),
     0
   );
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { Product, Price, Stock } from "@/types";
+import { Price, Stock } from "@/types";
 import { format } from "date-fns";
 
 export default function DashboardPage() {

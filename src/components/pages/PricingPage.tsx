@@ -1,10 +1,10 @@
-  "use client";
+"use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Product, Category } from "@/types";
 import { format } from "date-fns";
-import { Save, Trash2, Plus, Edit2 } from "lucide-react";
+import { Plus } from "lucide-react";
 
 const CATEGORIES: Category[] = [
   "Biscuits",
@@ -91,14 +91,6 @@ export default function PricingPage() {
     setShowModal(true);
   };
 
-  const handleEdit = (price: PriceHistoryItem) => {
-    setEditingPrice(price);
-    setModalProductId(price.product_id);
-    setModalPrice(price.price.toString());
-    setModalDate(price.effective_from);
-    setShowModal(true);
-  };
-
   const handleSave = async () => {
     try {
       const newPrice = parseFloat(modalPrice) || 0;
@@ -165,20 +157,6 @@ export default function PricingPage() {
       fetchData();
     } catch (error) {
       console.error("Error saving price:", error);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      const { error } = await supabase
-        .from("price_history")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
-      fetchData();
-    } catch (error) {
-      console.error("Error deleting price:", error);
     }
   };
 
@@ -316,9 +294,9 @@ export default function PricingPage() {
                   <table className="w-full text-sm">
                     <thead className="border-b border-border">
                       <tr>
-                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[160px]">Product</th>
-                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[100px]">Current Price</th>
-                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[200px]">History</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle">Product</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle">Current Price</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle">History</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -337,7 +315,7 @@ export default function PricingPage() {
                             </td>
                             <td className="px-4 py-2 align-middle">
                               <div className="flex flex-wrap gap-1">
-                                {history.slice(0, 3).map((ph, idx) => (
+                                {history.slice(0, 3).map((ph) => (
                                   <span 
                                     key={ph.id} 
                                     className="text-xs px-2 py-1 bg-muted rounded"
@@ -365,13 +343,11 @@ export default function PricingPage() {
         </div>
       )}
 
-      {/* Modal for adding/editing prices */}
+      {/* Modal for adding prices */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-card border border-border rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingPrice ? "Edit Price" : "Add New Price"}
-            </h3>
+            <h3 className="text-lg font-semibold mb-4">Add New Price</h3>
             
             <div className="space-y-4">
               <div>
@@ -379,7 +355,6 @@ export default function PricingPage() {
                 <select
                   value={modalProductId}
                   onChange={(e) => setModalProductId(e.target.value)}
-                  disabled={!!editingPrice}
                   className="w-full px-4 py-2 border border-border rounded-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">Select product...</option>
