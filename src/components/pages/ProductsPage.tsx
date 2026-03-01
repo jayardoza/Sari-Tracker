@@ -133,7 +133,7 @@ export default function ProductsPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-background text-foreground min-h-screen">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Products</h1>
@@ -271,34 +271,34 @@ export default function ProductsPage() {
                   <table className="w-full text-sm">
                     <thead className="border-b border-border">
                       <tr>
-                        <th className="text-left py-3 font-medium">
-                          Product Name
-                        </th>
-                        <th className="text-right py-3 font-medium">Actions</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[160px]">Product</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[120px]">Category</th>
+                        <th className="text-right px-4 py-2 font-medium align-middle min-w-[100px]">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {categoryProducts.map((product) => (
                         <tr
                           key={product.id}
-                          className="border-b border-border hover:bg-secondary transition-colors"
+                          className="border-b border-border hover:bg-secondary transition-colors align-middle"
                         >
-                          <td className="py-3">{product.name}</td>
-                          <td className="text-right py-3">
-                            <div className="flex justify-end gap-2">
-                              <button
-                                onClick={() => handleEdit(product)}
-                                className="p-2 hover:bg-muted rounded transition-colors text-muted-foreground hover:text-foreground"
-                              >
-                                <Edit2 size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(product.id)}
-                                className="p-2 hover:bg-destructive/10 rounded transition-colors text-destructive"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                            </div>
+                          <td className="px-4 py-2 align-middle">{product.name}</td>
+                          <td className="px-4 py-2 align-middle">{product.category.replace(/_/g, " ")}</td>
+                          <td className="px-4 py-2 text-right align-middle">
+                            <button
+                              onClick={() => handleEdit(product)}
+                              className="p-2 mr-2 hover:bg-muted rounded transition-colors"
+                              title="Edit"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(product.id)}
+                              className="p-2 hover:bg-destructive/10 rounded transition-colors text-destructive"
+                              title="Delete"
+                            >
+                              <Trash2 size={16} />
+                            </button>
                           </td>
                         </tr>
                       ))}

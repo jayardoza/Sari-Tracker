@@ -157,7 +157,7 @@ export default function SalesPage() {
   const monthlyVariance = monthlyPhysical - monthlyTotal;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-background text-foreground min-h-screen">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Sales</h1>
@@ -186,19 +186,11 @@ export default function SalesPage() {
             <table className="w-full text-sm">
               <thead className="border-b border-border">
                 <tr>
-                  <th className="text-left py-3 px-4 font-medium">Date</th>
-                  <th className="text-right py-3 px-4 font-medium">
-                    Total Sale
-                  </th>
-                  <th className="text-right py-3 px-4 font-medium">
-                    Physical Count
-                  </th>
-                  <th className="text-right py-3 px-4 font-medium">
-                    Variance
-                  </th>
-                  <th className="text-right py-3 px-4 font-medium">
-                    Actions
-                  </th>
+                  <th className="text-left px-4 py-2 font-medium align-middle min-w-[120px]">Date</th>
+                  <th className="text-right px-4 py-2 font-medium align-middle min-w-[120px]">Total Sale</th>
+                  <th className="text-right px-4 py-2 font-medium align-middle min-w-[140px]">Physical Count</th>
+                  <th className="text-right px-4 py-2 font-medium align-middle min-w-[120px]">Variance</th>
+                  <th className="text-right px-4 py-2 font-medium align-middle min-w-[100px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -210,13 +202,11 @@ export default function SalesPage() {
                   return (
                     <tr
                       key={date}
-                      className="border-b border-border hover:bg-secondary transition-colors"
+                      className="border-b border-border hover:bg-secondary transition-colors align-middle"
                     >
-                      <td className="py-3 px-4">{format(parse(date, "yyyy-MM-dd", new Date()), "MMM dd, yyyy")}</td>
-                      <td className="text-right py-3 px-4 font-medium">
-                        ₱{totalSale.toFixed(2)}
-                      </td>
-                      <td className="text-right py-3 px-4">
+                      <td className="px-4 py-2 align-middle">{format(parse(date, "yyyy-MM-dd", new Date()), "MMM dd, yyyy")}</td>
+                      <td className="px-4 py-2 text-right font-medium align-middle">₱{totalSale.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-right align-middle">
                         <input
                           type="number"
                           step="0.01"
@@ -225,13 +215,11 @@ export default function SalesPage() {
                             handlePhysicalCountChange(date, e.target.value)
                           }
                           placeholder="0.00"
-                          className="w-28 px-2 py-1 border border-border rounded bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-right"
+                          className="w-24 px-3 py-1 border border-border rounded bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary text-right"
                         />
                       </td>
-                      <td className="text-right py-3 px-4 font-medium">
-                        ₱{variance.toFixed(2)}
-                      </td>
-                      <td className="text-right py-3 px-4">
+                      <td className="px-4 py-2 text-right font-medium align-middle">₱{variance.toFixed(2)}</td>
+                      <td className="px-4 py-2 text-right align-middle">
                         <div className="flex justify-end gap-2">
                           <button
                             onClick={() => handleSave(date)}

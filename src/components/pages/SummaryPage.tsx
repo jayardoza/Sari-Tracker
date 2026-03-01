@@ -94,7 +94,7 @@ export default function SummaryPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-background text-foreground min-h-screen">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Summary</h1>

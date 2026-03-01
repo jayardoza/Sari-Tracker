@@ -1,72 +1,54 @@
-"use client";
 
+"use client";
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
+type Theme = "light" | "dark";
+
 interface ThemeContextType {
-  isDark: boolean;
+  theme: Theme;
+  setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
-  mounted: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [theme, setThemeState] = useState<Theme>("light");
 
   useEffect(() => {
-    // Check for saved theme preference
-    const savedTheme = localStorage.getItem("theme");
-    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    
-    const shouldBeDark = savedTheme === "dark" || (!savedTheme && systemPrefersDark);
-    
-    setIsDark(shouldBeDark);
-    applyTheme(shouldBeDark);
-    
-    setMounted(true);
+    // On mount, check localStorage or system preference
+    const saved = localStorage.getItem("theme");
+    if (saved === "dark" || saved === "light") {
+      setThemeState(saved);
+      updateHtmlClass(saved);
+    } else {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const initial = prefersDark ? "dark" : "light";
+      setThemeState(initial);
+      updateHtmlClass(initial);
+    }
   }, []);
 
-  const applyTheme = (dark: boolean) => {
-    // Apply to html element
-    if (dark) {
+  const updateHtmlClass = (theme: Theme) => {
+    if (theme === "dark") {
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
     }
-    
-    // Also apply to body for extra safety
-    if (dark) {
-      document.body.classList.add("dark");
-    } else {
-      document.body.classList.remove("dark");
-    }
-    
-    // Apply background directly to body
-    if (dark) {
-      document.body.style.backgroundColor = "#0f0f0f";
-      document.body.style.color = "#ffffff";
-    } else {
-      document.body.style.backgroundColor = "#ffffff";
-      document.body.style.color = "#000000";
-    }
+  };
+
+  const setTheme = (theme: Theme) => {
+    setThemeState(theme);
+    localStorage.setItem("theme", theme);
+    updateHtmlClass(theme);
   };
 
   const toggleTheme = () => {
-    const newIsDark = !isDark;
-    
-    // Save preference
-    localStorage.setItem("theme", newIsDark ? "dark" : "light");
-    
-    // Update state
-    setIsDark(newIsDark);
-    
-    // Apply theme
-    applyTheme(newIsDark);
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   return (
-    <ThemeContext.Provider value={{ isDark, toggleTheme, mounted }}>
+    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -74,8 +56,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
 export function useTheme() {
   const context = useContext(ThemeContext);
-  if (context === undefined) {
-    throw new Error("useTheme must be used within ThemeProvider");
-  }
+  if (!context) throw new Error("useTheme must be used within ThemeProvider");
   return context;
 }

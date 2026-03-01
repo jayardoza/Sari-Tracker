@@ -206,7 +206,7 @@ export default function DailyPage() {
   }, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-background text-foreground min-h-screen">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold tracking-tight">Daily Sales</h1>
@@ -289,13 +289,11 @@ export default function DailyPage() {
                   <table className="w-full text-sm">
                     <thead className="border-b border-border">
                       <tr>
-                        <th className="text-left py-3 font-medium">
-                          Product
-                        </th>
-                        <th className="text-left py-3 font-medium">Price</th>
-                        <th className="text-left py-3 font-medium">Qty</th>
-                        <th className="text-left py-3 font-medium">Total</th>
-                        <th className="text-right py-3 font-medium">Actions</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[160px]">Product</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[100px]">Price</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[80px]">Qty</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[100px]">Total</th>
+                        <th className="text-right px-4 py-2 font-medium align-middle min-w-[80px]">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -308,13 +306,11 @@ export default function DailyPage() {
                         return (
                           <tr
                             key={product.id}
-                            className="border-b border-border hover:bg-secondary transition-colors"
+                            className="border-b border-border hover:bg-secondary transition-colors align-middle"
                           >
-                            <td className="py-3">{product.name}</td>
-                            <td className="py-3">
-                              ₱{price.toFixed(2)}
-                            </td>
-                            <td className="py-3">
+                            <td className="px-4 py-2 align-middle">{product.name}</td>
+                            <td className="px-4 py-2 align-middle">₱{price.toFixed(2)}</td>
+                            <td className="px-4 py-2 align-middle">
                               <input
                                 type="number"
                                 min="0"
@@ -323,13 +319,11 @@ export default function DailyPage() {
                                   handleQuantityChange(product.id, e.target.value)
                                 }
                                 placeholder="0"
-                                className="w-24 px-3 py-1 border border-border rounded bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-16 px-3 py-1 border border-border rounded bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                               />
                             </td>
-                            <td className="py-3 font-medium">
-                              ₱{total.toFixed(2)}
-                            </td>
-                            <td className="text-right py-3">
+                            <td className="px-4 py-2 font-medium align-middle">₱{total.toFixed(2)}</td>
+                            <td className="px-4 py-2 text-right align-middle">
                               {hasExistingSale && (
                                 <button
                                   onClick={() => handleDelete(product.id)}

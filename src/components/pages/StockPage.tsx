@@ -42,6 +42,7 @@ export default function StockPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [prices, setPrices] = useState<Map<string, number>>(new Map());
   const [stockData, setStockData] = useState<Map<string, Stock>>(new Map());
+  const [prevStockData, setPrevStockData] = useState<Map<string, Stock>>(new Map());
   const [formData, setFormData] = useState<
     Map<string, Partial<Stock>>
   >(new Map());
@@ -62,18 +63,20 @@ export default function StockPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [productsRes, pricesRes, stockRes] = await Promise.all([
+      const [year, month] = selectedMonth.split("-");
+      const prevMonth = month === "01" ? `${parseInt(year) - 1}-12` : `${year}-${String(parseInt(month) - 1).padStart(2, "0")}`;
+
+      const [productsRes, pricesRes, stockRes, prevStockRes] = await Promise.all([
         supabase.from("products").select("*").order("name"),
         supabase.from("prices").select("*"),
-        supabase
-          .from("stock")
-          .select("*")
-          .eq("month_year", selectedMonth),
+        supabase.from("stock").select("*").eq("month_year", selectedMonth),
+        supabase.from("stock").select("*").eq("month_year", prevMonth),
       ]);
 
       if (productsRes.error) throw productsRes.error;
       if (pricesRes.error) throw pricesRes.error;
       if (stockRes.error) throw stockRes.error;
+      if (prevStockRes.error) throw prevStockRes.error;
 
       setProducts(productsRes.data || []);
 
@@ -89,8 +92,13 @@ export default function StockPage() {
       });
       setStockData(stockMap);
 
+      const prevStockMap = new Map<string, Stock>();
+      (prevStockRes.data || []).forEach((stock: Stock) => {
+        prevStockMap.set(stock.product_id, stock);
+      });
+      setPrevStockData(prevStockMap);
+
       // Calculate sales for the month
-      const [year, month] = selectedMonth.split("-");
       const startDate = `${year}-${month}-01`;
       const endDate = new Date(
         parseInt(year),
@@ -216,14 +224,20 @@ export default function StockPage() {
 
   const getComputedValues = (productId: string): StockRow => {
     const stock = stockData.get(productId);
-    const endStock = stock?.end_stock || 0;
+    const prevStock = prevStockData.get(productId);
+    // For non-January, use previous month's partial_stock as end_stock
+    const isJanuary = selectedMonth.split("-")[1] === "01";
+    const endStock = isJanuary
+      ? ((formData.get(productId)?.end_stock as number) || stock?.end_stock || 0)
+      : prevStock?.partial_stock || 0;
     const partialStock =
       (formData.get(productId)?.partial_stock as number) || stock?.partial_stock || 0;
     const additionalStock =
       (formData.get(productId)?.additional_stock as number) || stock?.additional_stock || 0;
-    const sale = dailySales.get(productId) || stock?.sale || 0;
+    const sale = dailySales.get(productId) || 0;
     const price = prices.get(productId) || 0;
 
+    // Variance: partial_stock - end_stock
     const variance = partialStock - endStock;
     const totalStock = partialStock + additionalStock - sale;
     const stockAmount = totalStock * price;
@@ -267,7 +281,7 @@ export default function StockPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-background text-foreground min-h-screen">
       {/* Add Stock Modal */}
       {addModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -423,44 +437,46 @@ export default function StockPage() {
                         const stock = stockData.get(product.id);
                         const computed = getComputedValues(product.id);
                         const endStockValue = (formData.get(product.id)?.end_stock as number) ?? stock?.end_stock ?? "";
+                        const partialStockValue = (formData.get(product.id)?.partial_stock as number) ?? stock?.partial_stock ?? "";
                         const additionalStockValue = (formData.get(product.id)?.additional_stock as number) ?? stock?.additional_stock ?? 0;
+
+                        // Get previous month for end stock logic
+                        const [year, month] = selectedMonth.split("-");
+                        const prevMonth = month === "01" ? `${parseInt(year) - 1}-12` : `${year}-${String(parseInt(month) - 1).padStart(2, "0")}`;
+                        // Fetch previous month stock for this product
+                        // (Assume previousStockData is available, otherwise show blank)
+                        // You may want to fetch previousStockData in fetchData for full accuracy
 
                         return (
                           <tr
                             key={product.id}
-                            className="border-b border-border hover:bg-secondary transition-colors"
+                            className="border-b border-border hover:bg-secondary transition-colors align-middle"
                           >
-                            <td className="py-2 px-2">{product.name}</td>
-                            <td className="py-2 px-2">
-                              <input
-                                type="number"
-                                min="0"
-                                value={endStockValue}
-                                disabled={!isJanuary}
-                                onChange={(e) =>
-                                  handleFieldChange(
-                                    product.id,
-                                    "end_stock",
-                                    e.target.value
-                                  )
-                                }
-                                className={`w-16 px-2 py-1 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary ${
-                                  isJanuary
-                                    ? "bg-input text-foreground"
-                                    : "bg-muted text-muted-foreground"
-                                }`}
-                              />
+                            <td className="px-2 py-2 align-middle">{product.name}</td>
+                            <td className="px-2 py-2 align-middle">
+                              {isJanuary ? (
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={endStockValue}
+                                  onChange={(e) =>
+                                    handleFieldChange(
+                                      product.id,
+                                      "end_stock",
+                                      e.target.value
+                                    )
+                                  }
+                                  className="w-16 px-2 py-1 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                />
+                              ) : (
+                                <span>{endStockValue}</span>
+                              )}
                             </td>
-                            <td className="py-2 px-2">
+                            <td className="px-2 py-2 align-middle">
                               <input
                                 type="number"
                                 min="0"
-                                value={
-                                  (formData.get(product.id)
-                                    ?.partial_stock as number) ||
-                                  stock?.partial_stock ||
-                                  ""
-                                }
+                                value={partialStockValue}
                                 onChange={(e) =>
                                   handleFieldChange(
                                     product.id,
@@ -468,14 +484,11 @@ export default function StockPage() {
                                     e.target.value
                                   )
                                 }
-                                placeholder="0"
                                 className="w-16 px-2 py-1 border border-border rounded bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                               />
                             </td>
-                            <td className="py-2 px-2 text-center">
-                              {computed.variance}
-                            </td>
-                            <td className="py-2 px-2">
+                            <td className="px-2 py-2 align-middle">{computed.variance}</td>
+                            <td className="px-2 py-2 align-middle">
                               <div className="flex items-center gap-1">
                                 <input
                                   type="number"
@@ -499,19 +512,11 @@ export default function StockPage() {
                                 </button>
                               </div>
                             </td>
-                            <td className="py-2 px-2 text-center">
-                              {computed.sale}
-                            </td>
-                            <td className="py-2 px-2 font-medium">
-                              {computed.total_stock}
-                            </td>
-                            <td className="py-2 px-2 font-medium">
-                              ₱{computed.stock_amount.toFixed(2)}
-                            </td>
-                            <td className="py-2 px-2 font-medium">
-                              ₱{computed.stock_variance.toFixed(2)}
-                            </td>
-                            <td className="text-right py-2 px-2">
+                            <td className="px-2 py-2 align-middle">{computed.sale}</td>
+                            <td className="px-2 py-2 align-middle">{computed.total_stock}</td>
+                            <td className="px-2 py-2 align-middle">₱{computed.stock_amount.toFixed(2)}</td>
+                            <td className="px-2 py-2 align-middle">₱{computed.stock_variance.toFixed(2)}</td>
+                            <td className="text-right px-2 py-2 align-middle">
                               <div className="flex justify-end gap-1">
                                 <button
                                   onClick={() => handleSave(product.id)}

@@ -95,7 +95,7 @@ export default function DashboardPage() {
   }, [fetchData]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 bg-background text-foreground min-h-screen">
       <div>
         <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-2">

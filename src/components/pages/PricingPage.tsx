@@ -131,7 +131,7 @@ export default function PricingPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 bg-background text-foreground min-h-screen">
       <div>
         <h1 className="text-4xl font-bold tracking-tight">Pricing</h1>
         <p className="text-muted-foreground mt-2">
@@ -203,21 +203,19 @@ export default function PricingPage() {
                   <table className="w-full text-sm">
                     <thead className="border-b border-border">
                       <tr>
-                        <th className="text-left py-3 font-medium">
-                          Product Name
-                        </th>
-                        <th className="text-left py-3 font-medium">Price (₱)</th>
-                        <th className="text-right py-3 font-medium">Action</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[160px]">Product Name</th>
+                        <th className="text-left px-4 py-2 font-medium align-middle min-w-[120px]">Price (₱)</th>
+                        <th className="text-right px-4 py-2 font-medium align-middle min-w-[100px]">Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       {categoryProducts.map((product) => (
                         <tr
                           key={product.id}
-                          className="border-b border-border hover:bg-secondary transition-colors"
+                          className="border-b border-border hover:bg-secondary transition-colors align-middle"
                         >
-                          <td className="py-3">{product.name}</td>
-                          <td className="py-3">
+                          <td className="px-4 py-2 align-middle">{product.name}</td>
+                          <td className="px-4 py-2 align-middle">
                             <div className="flex items-center gap-1">
                               <span>₱</span>
                               <input
@@ -229,11 +227,11 @@ export default function PricingPage() {
                                   handlePriceChange(product.id, e.target.value)
                                 }
                                 placeholder="0.00"
-                                className="w-32 px-3 py-1 border border-border rounded bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                                className="w-24 px-3 py-1 border border-border rounded bg-input text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                               />
                             </div>
                           </td>
-                          <td className="text-right py-3">
+                          <td className="px-4 py-2 text-right align-middle">
                             <button
                               onClick={() => handleSave(product.id)}
                               className="flex items-center gap-2 px-3 py-1 bg-primary text-primary-foreground rounded hover:opacity-90 transition-opacity text-sm"
