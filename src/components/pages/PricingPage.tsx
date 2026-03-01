@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Product, Price, Category } from "@/types";
+import { format } from "date-fns";
 import { Save } from "lucide-react";
 
 const CATEGORIES: Category[] = [
