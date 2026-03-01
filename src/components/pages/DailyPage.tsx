@@ -28,6 +28,15 @@ const CATEGORIES: Category[] = [
   "Refreshment",
 ];
 
+interface PriceHistoryItem {
+  id: string;
+  product_id: string;
+  price: number;
+  effective_from: string;
+  effective_to: string | null;
+  created_at: string;
+}
+
 export default function DailyPage() {
   const [selectedDate, setSelectedDate] = useState(
     format(new Date(), "yyyy-MM-dd")
@@ -47,6 +56,7 @@ export default function DailyPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
+
       const [productsRes, pricesRes, salesRes] = await Promise.all([
         supabase.from("products").select("*").order("name"),
         supabase.from("prices").select("*"),
@@ -62,10 +72,41 @@ export default function DailyPage() {
 
       setProducts(productsRes.data || []);
 
+      // Get price history for the selected date
+      const priceHistoryRes = await supabase
+        .from("price_history")
+        .select("*")
+        .lte("effective_from", selectedDate)
+        .order("effective_from", { ascending: false });
+
+      if (priceHistoryRes.error) console.error("Price history fetch error:", priceHistoryRes.error);
+
+      // Build price map - first try price_history, then fall back to prices table
       const priceMap = new Map<string, number>();
+      
+      // Process price history - get the most recent price effective for selected date
+      if (priceHistoryRes.data) {
+        const historyData = priceHistoryRes.data;
+        // Filter to only include entries effective for the selected date
+        const filteredHistory = historyData.filter((ph: PriceHistoryItem) => 
+          ph.effective_to === null || ph.effective_to >= selectedDate
+        );
+        
+        // Get the most recent price for each product
+        filteredHistory.forEach((priceHistory: PriceHistoryItem) => {
+          if (!priceMap.has(priceHistory.product_id)) {
+            priceMap.set(priceHistory.product_id, priceHistory.price);
+          }
+        });
+      }
+
+      // Fall back to legacy prices table if no history price found
       (pricesRes.data || []).forEach((price: Price) => {
-        priceMap.set(price.product_id, price.price);
+        if (!priceMap.has(price.product_id)) {
+          priceMap.set(price.product_id, price.price);
+        }
       });
+
       setPrices(priceMap);
 
       const salesMap = new Map<string, DailySale>();

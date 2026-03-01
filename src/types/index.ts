@@ -36,6 +36,16 @@ export interface Price {
   product?: Product;
 }
 
+export interface PriceHistory {
+  id: string;
+  product_id: string;
+  price: number;
+  effective_from: string;
+  effective_to: string | null;
+  created_at: string;
+  product?: Product;
+}
+
 export interface DailySale {
   id: string;
   product_id: string;
