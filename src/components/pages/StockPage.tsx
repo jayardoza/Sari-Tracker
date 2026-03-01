@@ -51,10 +51,11 @@ export default function StockPage() {
   const [dailySales, setDailySales] = useState<Map<string, number>>(
     new Map()
   );
-  const [filterExpanded, setFilterExpanded] = useState(false);
+const [filterExpanded, setFilterExpanded] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<Category>>(
     new Set(CATEGORIES)
   );
+  const [savingAll, setSavingAll] = useState(false);
   // Removed addModal and addAmount state
 
   // Check if selected month is January (for end_stock editing)
@@ -181,7 +182,7 @@ export default function StockPage() {
     }
   };
 
-  const handleDelete = async (productId: string) => {
+const handleDelete = async (productId: string) => {
     try {
       const existing = stockData.get(productId);
       if (!existing) return;
@@ -195,6 +196,47 @@ export default function StockPage() {
       fetchData();
     } catch (error) {
       console.error("Error deleting stock:", error);
+    }
+  };
+
+  const handleSaveAll = async () => {
+    try {
+      setSavingAll(true);
+      const productIdsWithChanges = Array.from(formData.keys());
+      
+      for (const productId of productIdsWithChanges) {
+        const data = formData.get(productId);
+        if (!data) continue;
+
+        const existingStock = stockData.get(productId);
+
+        if (existingStock) {
+          const { error } = await supabase
+            .from("stock")
+            .update(data)
+            .eq("id", existingStock.id);
+
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("stock")
+            .insert([
+              {
+                product_id: productId,
+                month_year: selectedMonth,
+                ...data,
+              },
+            ]);
+
+          if (error) throw error;
+        }
+      }
+
+      await fetchData();
+    } catch (error) {
+      console.error("Error saving all stock:", error);
+    } finally {
+      setSavingAll(false);
     }
   };
 
@@ -269,7 +311,7 @@ export default function StockPage() {
           <h1 className="text-4xl font-bold tracking-tight">Stock</h1>
           <p className="text-muted-foreground mt-2">Manage monthly stock</p>
         </div>
-        <div className="flex gap-2 items-end">
+<div className="flex gap-2 items-end">
           <div>
             <label className="block text-sm font-medium mb-2">Year</label>
             <select
@@ -303,6 +345,14 @@ export default function StockPage() {
               })}
             </select>
           </div>
+          <button
+            onClick={handleSaveAll}
+            disabled={savingAll || formData.size === 0}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <Save size={18} />
+            {savingAll ? "Saving..." : "Save All"}
+          </button>
         </div>
       </div>
 
